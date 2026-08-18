@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -19,6 +19,41 @@ describe('PersistentBlockedIdentityStore', () => {
 
       const second = new PersistentBlockedIdentityStore(path, secret);
       expect(await second.has(' +61 400 123 456 ')).toBe(true);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('serializes concurrent writes without losing blocked identities', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'neon-guard-'));
+    const path = join(directory, 'blocked.json');
+
+    try {
+      const store = new PersistentBlockedIdentityStore(path, secret);
+      await Promise.all([
+        store.add('+61 400 123 456'),
+        store.add('+61 400 123 457'),
+        store.add('+61 400 123 458'),
+      ]);
+
+      const restarted = new PersistentBlockedIdentityStore(path, secret);
+      await expect(restarted.has('+61 400 123 456')).resolves.toBe(true);
+      await expect(restarted.has('+61 400 123 457')).resolves.toBe(true);
+      await expect(restarted.has('+61 400 123 458')).resolves.toBe(true);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('writes only digests and keeps the persisted file private', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'neon-guard-'));
+    const path = join(directory, 'blocked.json');
+
+    try {
+      const store = new PersistentBlockedIdentityStore(path, secret);
+      await store.add(phone);
+      const contents = await readFile(path, 'utf8');
+      expect(contents).not.toContain(phone);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
