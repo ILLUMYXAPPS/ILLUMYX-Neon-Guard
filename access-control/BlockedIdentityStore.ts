@@ -25,6 +25,8 @@ export class BlockedIdentityStore implements IdentityStore {
 export class PersistentBlockedIdentityStore implements IdentityStore {
   private blocked = new Set<string>();
   private initialized = false;
+  private initialization?: Promise<void>;
+  private writeChain: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly filePath: string,
@@ -35,6 +37,13 @@ export class PersistentBlockedIdentityStore implements IdentityStore {
 
   async init(): Promise<void> {
     if (this.initialized) return;
+    if (!this.initialization) {
+      this.initialization = this.load();
+    }
+    await this.initialization;
+  }
+
+  private async load(): Promise<void> {
     try {
       const raw = await fs.readFile(this.filePath, 'utf8');
       const values: unknown = JSON.parse(raw);
@@ -52,14 +61,18 @@ export class PersistentBlockedIdentityStore implements IdentityStore {
 
   async add(identifier: string): Promise<void> {
     await this.init();
-    this.blocked.add(hashIdentity(identifier, this.secret));
-    await this.persist();
+    return this.enqueueWrite(async () => {
+      this.blocked.add(hashIdentity(identifier, this.secret));
+      await this.persist();
+    });
   }
 
   async remove(identifier: string): Promise<void> {
     await this.init();
-    this.blocked.delete(hashIdentity(identifier, this.secret));
-    await this.persist();
+    return this.enqueueWrite(async () => {
+      this.blocked.delete(hashIdentity(identifier, this.secret));
+      await this.persist();
+    });
   }
 
   async has(identifier: string): Promise<boolean> {
@@ -69,12 +82,22 @@ export class PersistentBlockedIdentityStore implements IdentityStore {
 
   async clear(): Promise<void> {
     await this.init();
-    this.blocked.clear();
-    await this.persist();
+    return this.enqueueWrite(async () => {
+      this.blocked.clear();
+      await this.persist();
+    });
+  }
+
+  private enqueueWrite(task: () => Promise<void>): Promise<void> {
+    const run = this.writeChain.then(task);
+    this.writeChain = run.catch(() => undefined);
+    return run;
   }
 
   private async persist(): Promise<void> {
-    await fs.mkdir(dirname(this.filePath), { recursive: true });
+    const directory = dirname(this.filePath);
+    await fs.mkdir(directory, { recursive: true, mode: 0o700 });
+    await fs.chmod(directory, 0o700);
     const tempPath = `${this.filePath}.tmp`;
     await fs.writeFile(tempPath, `${JSON.stringify([...this.blocked])}\n`, { encoding: 'utf8', mode: 0o600 });
     await fs.rename(tempPath, this.filePath);
