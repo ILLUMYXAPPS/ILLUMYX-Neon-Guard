@@ -24,26 +24,26 @@ export function authorizeServerRequest(
   now = Date.now(),
 ): ServerAuthorizationDecision {
   if (!request.tokenId || !request.deviceId || !request.resource || !request.action) {
-    const decision = { allowed: false, reason: 'invalid_request' as const };
+    const decision: ServerAuthorizationDecision = { allowed: false, reason: 'invalid_request' };
     audit.record({ outcome: 'denied', reason: decision.reason, timestamp: new Date(now).toISOString() });
     return decision;
   }
 
   const token = validateTrustedDeviceToken(tokenStore, request.tokenId, now, false);
   if (!token.valid || !token.record) {
-    const reason = token.reason === 'expired' ? 'expired_token' : token.reason === 'revoked' ? 'revoked_token' : token.reason === 'replayed' ? 'replayed_token' : 'unknown_token';
-    const decision = { allowed: false, reason };
+    const reason: ServerAuthorizationDecision['reason'] = token.reason === 'expired' ? 'expired_token' : token.reason === 'revoked' ? 'revoked_token' : token.reason === 'replayed' ? 'replayed_token' : 'unknown_token';
+    const decision: ServerAuthorizationDecision = { allowed: false, reason };
     audit.record({ outcome: 'denied', reason, deviceId: request.deviceId, resource: request.resource, action: request.action, timestamp: new Date(now).toISOString() });
     return decision;
   }
 
   if (token.record.deviceId !== request.deviceId) {
-    const decision = { allowed: false, reason: 'device_mismatch' as const };
+    const decision: ServerAuthorizationDecision = { allowed: false, reason: 'device_mismatch' };
     audit.record({ outcome: 'denied', reason: decision.reason, deviceId: request.deviceId, resource: request.resource, action: request.action, timestamp: new Date(now).toISOString() });
     return decision;
   }
 
-  const decision = { allowed: true, reason: 'authorized' as const };
+  const decision: ServerAuthorizationDecision = { allowed: true, reason: 'authorized' };
   audit.record({ outcome: 'allowed', reason: decision.reason, deviceId: request.deviceId, resource: request.resource, action: request.action, timestamp: new Date(now).toISOString() });
   return decision;
 }
