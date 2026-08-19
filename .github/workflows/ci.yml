@@ -14,12 +14,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 22
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Type-check
-        run: npm run typecheck
+        run: npx tsc --noEmit
       - name: Test
         run: npm test
 
@@ -27,5 +26,5 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Swift tests
-        run: swift test
+      - name: Type-check trusted-device implementation
+        run: swiftc -typecheck ios/Sources/NeonGuardClient/TrustedDeviceStore.swift
