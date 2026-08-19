@@ -18,6 +18,8 @@ public struct AccessResponse: Codable, Sendable {
 }
 
 public enum NeonGuardClientError: Error {
+    case invalidEndpoint
+    case invalidCredential
     case invalidResponse
     case denied
 }
@@ -34,6 +36,13 @@ public actor NeonGuardClient {
     }
 
     public func evaluate(credential: String) async throws -> AccessDecision {
+        guard endpoint.scheme == "https", endpoint.host != nil else {
+            throw NeonGuardClientError.invalidEndpoint
+        }
+        guard !credential.isEmpty else {
+            throw NeonGuardClientError.invalidCredential
+        }
+
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -43,6 +52,10 @@ public actor NeonGuardClient {
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode) else {
+            throw NeonGuardClientError.invalidResponse
+        }
+        if let contentType = http.value(forHTTPHeaderField: "Content-Type"),
+           !contentType.lowercased().contains("application/json") {
             throw NeonGuardClientError.invalidResponse
         }
 
