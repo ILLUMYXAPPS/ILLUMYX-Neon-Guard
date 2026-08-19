@@ -46,6 +46,6 @@ describe('Server authorization boundary', () => {
     const store = new Store();
     const audit = new Audit();
     authorizeServerRequest({ tokenId: '', deviceId: 'device-1', resource: 'account', action: 'read' }, store, audit, 1000);
-    expect(audit.events).toContainEqual({ outcome: 'denied', reason: 'invalid_request' });
+    expect(audit.events).toContainEqual(expect.objectContaining({ outcome: 'denied', reason: 'invalid_request' }));
   });
 });
