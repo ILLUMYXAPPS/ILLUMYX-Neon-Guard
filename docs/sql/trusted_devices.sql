@@ -1,6 +1,7 @@
--- PostgreSQL reference schema for the production TrustedDeviceStore adapter.
--- The application must use a transaction and lock the account's active rows
--- before enforcing the three-device limit.
+-- PostgreSQL production schema for TrustedDeviceStore.
+-- Mutations must run in a transaction and acquire the account-scoped
+-- pg_advisory_xact_lock used by PostgresTrustedDeviceStore before enforcing
+-- the active-device limit.
 
 CREATE TABLE IF NOT EXISTS trusted_devices (
   account_id TEXT NOT NULL,
@@ -11,7 +12,9 @@ CREATE TABLE IF NOT EXISTS trusted_devices (
   revoked_at BIGINT,
   last_seen_at BIGINT,
   token_digest CHAR(64),
-  PRIMARY KEY (account_id, device_id)
+  PRIMARY KEY (account_id, device_id),
+  CHECK (revoked_at IS NULL OR revoked_at >= registered_at),
+  CHECK (token_digest IS NULL OR token_digest ~ '^[0-9a-f]{64}$')
 );
 
 CREATE INDEX IF NOT EXISTS trusted_devices_active_idx
