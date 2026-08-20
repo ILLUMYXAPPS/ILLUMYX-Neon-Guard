@@ -17,3 +17,5 @@ export { SecurityAlertDispatcher } from './SecurityAlertDispatcher';
 export type { SecurityAlert, SecurityAlertChannel } from './SecurityAlertDispatcher';
 export { PostgresSecurityAuditStore } from './PostgresSecurityAuditStore';
 export type { AsyncSecurityAuditStore, SqlExecutor } from './PostgresSecurityAuditStore';
+export { PostgresTrustedDeviceStore } from './PostgresTrustedDeviceStore';
+export type { PostgresTrustedDeviceStoreOptions } from './PostgresTrustedDeviceStore';
