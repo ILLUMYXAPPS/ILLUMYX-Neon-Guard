@@ -16,6 +16,13 @@ class FakeTransaction implements TrustedDeviceTransaction {
     if (!current) throw new Error('device_not_found');
     this.records.set(key, { ...current, revokedAt });
   }
+  async replace(oldDeviceId: string, replacement: StoredTrustedDevice, timestamp: number): Promise<void> {
+    const oldKey = `${replacement.accountId}:${oldDeviceId}`;
+    const current = this.records.get(oldKey);
+    if (!current) throw new Error('device_not_found');
+    this.records.set(oldKey, { ...current, revokedAt: timestamp });
+    this.records.set(`${replacement.accountId}:${replacement.deviceId}`, { ...replacement });
+  }
 }
 
 describe('TransactionalTrustedDeviceStoreAdapter', () => {
