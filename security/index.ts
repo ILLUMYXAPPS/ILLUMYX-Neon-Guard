@@ -11,3 +11,7 @@ export type {
 } from './TrustedDeviceManagement';
 export { InMemorySecurityAuditStore } from './SecurityAuditStore';
 export type { SecurityAuditStore, SecurityAuditEvent, AuditEventType } from './SecurityAuditStore';
+export { PersistentSecurityAuditSink } from './SecurityAuditIntegration';
+export type { SecurityAuditSink } from './SecurityAuditIntegration';
+export { SecurityAlertDispatcher } from './SecurityAlertDispatcher';
+export type { SecurityAlert, SecurityAlertChannel } from './SecurityAlertDispatcher';
