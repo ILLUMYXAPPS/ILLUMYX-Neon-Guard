@@ -27,3 +27,13 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  ios-test:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Swift tests
+        working-directory: ios
+        run: swift test
