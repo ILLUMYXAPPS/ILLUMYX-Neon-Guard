@@ -15,3 +15,5 @@ export { PersistentSecurityAuditSink } from './SecurityAuditIntegration';
 export type { SecurityAuditSink } from './SecurityAuditIntegration';
 export { SecurityAlertDispatcher } from './SecurityAlertDispatcher';
 export type { SecurityAlert, SecurityAlertChannel } from './SecurityAlertDispatcher';
+export { PostgresSecurityAuditStore } from './PostgresSecurityAuditStore';
+export type { SqlExecutor } from './PostgresSecurityAuditStore';
