@@ -9,3 +9,5 @@ export type {
   DeviceManagementAuditEvent,
   DeviceManagementAuditSink,
 } from './TrustedDeviceManagement';
+export { InMemorySecurityAuditStore } from './SecurityAuditStore';
+export type { SecurityAuditStore, SecurityAuditEvent, AuditEventType } from './SecurityAuditStore';
