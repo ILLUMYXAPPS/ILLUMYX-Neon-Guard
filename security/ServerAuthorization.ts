@@ -29,7 +29,9 @@ export function authorizeServerRequest(
     return decision;
   }
 
-  const token = validateTrustedDeviceToken(tokenStore, request.tokenId, now, false);
+  // Authorization requests consume the trusted-device token. This keeps replay
+  // protection effective at the server boundary instead of bypassing it.
+  const token = validateTrustedDeviceToken(tokenStore, request.tokenId, now, true);
   if (!token.valid || !token.record) {
     const reason: ServerAuthorizationDecision['reason'] = token.reason === 'expired' ? 'expired_token' : token.reason === 'revoked' ? 'revoked_token' : token.reason === 'replayed' ? 'replayed_token' : 'unknown_token';
     const decision: ServerAuthorizationDecision = { allowed: false, reason };
