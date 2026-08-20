@@ -42,6 +42,16 @@ describe('Server authorization boundary', () => {
     expect(authorizeServerRequest({ tokenId: revoked, deviceId: 'device-1', resource: 'account', action: 'read' }, store, audit, 1600)).toEqual({ allowed: false, reason: 'revoked_token' });
   });
 
+  it('consumes an authorization token and rejects replay', () => {
+    const store = new Store();
+    const audit = new Audit();
+    const token = issueTrustedDeviceToken(store, 'device-1', 1000, 5000);
+    const request = { tokenId: token, deviceId: 'device-1', resource: 'account', action: 'read' };
+
+    expect(authorizeServerRequest(request, store, audit, 2000)).toEqual({ allowed: true, reason: 'authorized' });
+    expect(authorizeServerRequest(request, store, audit, 2001)).toEqual({ allowed: false, reason: 'replayed_token' });
+  });
+
   it('audits authorization outcomes', () => {
     const store = new Store();
     const audit = new Audit();
