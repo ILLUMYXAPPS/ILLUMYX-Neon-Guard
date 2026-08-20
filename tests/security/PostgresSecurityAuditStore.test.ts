@@ -44,6 +44,7 @@ describe('PostgresSecurityAuditStore', () => {
       accountId: 'acct-1',
       type: 'UNKNOWN_ACCESS' as const,
       timestamp: 1750000000000,
+      reason: 'unknown_device',
     };
 
     await store.append(event);
