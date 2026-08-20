@@ -39,7 +39,7 @@ describe('security adversarial regression cases', () => {
   });
 
   it('does not expose raw token material through token digest output', async () => {
-    const { tokenDigest } = await import('../../security/TrustedDeviceStore');
+    const { tokenDigest } = await import('../../security/TrustedDeviceStore.js');
     const token = 'super-secret-token';
     const digest = tokenDigest(token);
     expect(digest).not.toContain(token);
