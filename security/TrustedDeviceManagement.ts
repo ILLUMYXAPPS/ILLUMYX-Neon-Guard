@@ -62,12 +62,7 @@ export class TrustedDeviceManager {
   async replace(oldDeviceId: string, replacement: StoredTrustedDevice, actorId: string): Promise<void> {
     if (replacement.deviceId === oldDeviceId) throw new Error('replacement_must_be_new_device');
     await this.requireOwner(replacement.accountId, actorId, 'REPLACE_DEVICE');
-    await this.store.revoke(replacement.accountId, oldDeviceId, this.clock());
-    try {
-      await this.store.save(replacement);
-    } catch (error) {
-      throw error;
-    }
+    await this.store.replace(oldDeviceId, replacement, this.clock());
     this.audit.record({
       type: 'trusted_device_replaced',
       accountId: replacement.accountId,
