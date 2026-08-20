@@ -5,6 +5,7 @@ export interface TrustedDeviceTransaction {
   list(accountId: string): Promise<StoredTrustedDevice[]>;
   save(device: StoredTrustedDevice): Promise<void>;
   revoke(accountId: string, deviceId: string, revokedAt: number): Promise<void>;
+  replace(oldDeviceId: string, replacement: StoredTrustedDevice, timestamp: number): Promise<void>;
 }
 
 export interface TransactionalTrustedDeviceStore extends TrustedDeviceStore {
@@ -42,5 +43,14 @@ export class TransactionalTrustedDeviceStoreAdapter implements TransactionalTrus
 
   revoke(accountId: string, deviceId: string, revokedAt: number): Promise<void> {
     return this.transaction(tx => tx.revoke(accountId, deviceId, revokedAt));
+  }
+
+  replace(oldDeviceId: string, replacement: StoredTrustedDevice, timestamp: number): Promise<void> {
+    return this.transaction(async tx => {
+      if (!replacement.accountId || !replacement.deviceId || !replacement.label) {
+        throw new Error('invalid_device');
+      }
+      await tx.replace(oldDeviceId, replacement, timestamp);
+    });
   }
 }

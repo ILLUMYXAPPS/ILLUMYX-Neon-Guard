@@ -10,6 +10,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: neon_guard_test
+          POSTGRES_DB: neon_guard
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d neon_guard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://postgres:neon_guard_test@localhost:5432/neon_guard
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,6 +36,18 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Apply PostgreSQL migrations
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import pg from 'pg';
+          const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+          for (const file of ['docs/sql/trusted_devices.sql', 'docs/sql/security_audit.sql']) {
+            await pool.query(readFileSync(file, 'utf8'));
+          }
+          await pool.end();
+          NODE
 
       - name: Type-check
         run: npx tsc --noEmit
