@@ -64,3 +64,6 @@ jobs:
       - name: Run Swift tests
         working-directory: ios
         run: swift test
+
+      - name: Build ILLUMYXAPP
+        run: xcodebuild -project ios/ILLUMYXAPP.xcodeproj -scheme ILLUMYXAPP -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build
