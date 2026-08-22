@@ -38,9 +38,9 @@ For asynchronous authentication flows, call `AccessGate.evaluateAsync()` before 
 
 ## Persistence
 
-`PersistentBlockedIdentityStore` persists only HMAC digests in a local JSON file and writes through a temporary file before an atomic rename. The store initializes itself from disk and survives application/process restarts.
+`PersistentBlockedIdentityStore` persists only HMAC digests in a local JSON file and writes through a temporary file before an atomic rename. It is a development adapter, not a distributed production database.
 
-The persistence adapter is suitable as a framework-independent development integration. For a distributed production deployment, replace it with a transactional database or managed datastore with access controls, backups, concurrency handling, and operational auditing.
+`TransactionalStoreAdapter` defines the production integration boundary. A production implementation must supply real BEGIN/COMMIT/ROLLBACK semantics, durable storage, access controls, backups, concurrency handling, and operational auditing. Transaction failures propagate to the access layer so callers can fail closed.
 
 ## Project structure
 
@@ -49,7 +49,8 @@ access-control/
 ├── AccessGate.ts
 ├── AccessPolicy.ts
 ├── IdentityHasher.ts
-└── BlockedIdentityStore.ts
+├── BlockedIdentityStore.ts
+└── TransactionalBlockedIdentityStore.ts
 
 security/
 ├── SecurityEvent.ts
@@ -58,7 +59,8 @@ security/
 tests/
 └── access-control/
     ├── AccessGate.test.ts
-    └── PersistentBlockedIdentityStore.test.ts
+    ├── PersistentBlockedIdentityStore.test.ts
+    └── TransactionalBlockedIdentityStore.test.ts
 ```
 
 ## Scope
@@ -71,13 +73,14 @@ Neon Guard can enforce authorization within applications and services controlled
 - [x] TypeScript security core
 - [x] Keyed HMAC-SHA-256 identity hashing
 - [x] In-memory blocked identity store
-- [x] Persistent blocked identity store
+- [x] Persistent development store
 - [x] Deterministic allow/deny gate
 - [x] Async authentication gate integration
 - [x] Explicit fail-closed decision path
 - [x] Security event model
 - [x] Unit-test coverage for core decisions
-- [ ] Distributed production datastore integration
+- [x] Production datastore transaction boundary
+- [ ] Concrete distributed datastore implementation
 - [ ] Android/iOS integration
 - [ ] Production security review
 
